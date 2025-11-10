@@ -1,6 +1,37 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:async';
+import 'dart:isolate';
 import 'package:ansicolor/ansicolor.dart';
+import '../lib/models.dart';
+import '../lib/file_handler.dart';
+import '../lib/game_logger.dart';
+
+/// Отправка сообщения в изолят для обработки
+Future<void> _sendMessageToIsolate(SendPort sendPort, String message) async {
+  final receivePort = ReceivePort();
+  sendPort.send([message, receivePort.sendPort]);
+  await receivePort.first;
+  receivePort.close();
+}
+
+/// Функция для изолята, обрабатывающая сообщения
+void isolateEntryPoint(SendPort sendPort) {
+  final receivePort = ReceivePort();
+  sendPort.send(receivePort.sendPort);
+  
+  receivePort.listen((message) {
+    final List<dynamic> args = message;
+    final String msg = args[0];
+    final SendPort replyPort = args[1];
+    
+    // Обработка сообщения
+    print('Изолят получил сообщение: $msg');
+    
+    // Отправляем подтверждение
+    replyPort.send('Сообщение обработано: $msg');
+  });
+}
 
 // Глобальные цвета для сообщений
 final titleColor = AnsiPen()..magenta(bold: true);
@@ -175,6 +206,16 @@ class Board {
   }
 
   bool allShipsSunk() => ships.every((ship) => ship.isSunk());
+  
+  // Добавим метод для получения статуса кораблей
+  List<ShipStatus> getShipStatuses() {
+    return ships.map((ship) => ShipStatus(
+      name: ship.name,
+      size: ship.size,
+      hits: ship.hits.where((hit) => hit).length,
+      isSunk: ship.isSunk()
+    )).toList();
+  }
 }
 
 class Player {
@@ -447,6 +488,10 @@ class Player {
     return placed;
   }
 
+  // Добавим счетчики для статистики
+  int hits = 0;
+  int misses = 0;
+
   Point<int> getAttackPosition() {
     if (isBot) {
       return _getBotAttackPosition();
@@ -484,7 +529,11 @@ class BattleshipGame {
   late Player currentPlayer;
   late Player opponent;
   int boardSize;
-  bool isPlayerVsPlayer = false; // Флаг для определения режима игры
+  bool isPlayerVsPlayer = false;
+  
+  // Добавим изолят
+  late Isolate _isolate;
+  late SendPort _sendPort;
 
   // Цвета для сообщений игры
   static final titleColor = AnsiPen()..magenta(bold: true);
@@ -493,10 +542,32 @@ class BattleshipGame {
   static final errorColor = AnsiPen()..red(bold: true);
   static final infoColor = AnsiPen()..yellow(bold: true);
 
-  BattleshipGame(this.boardSize);
-
-  void start() {
+  // Обновим конструктор
+  BattleshipGame(this.boardSize) {
+    // Инициализируем изолят
+    _initIsolate();
+  }
+  
+  // Инициализация изолята
+  Future<void> _initIsolate() async {
+    final receivePort = ReceivePort();
+    _isolate = await Isolate.spawn(isolateEntryPoint, receivePort.sendPort);
+    _sendPort = await receivePort.first as SendPort;
+  }
+  
+  // Отправка сообщения в изолят
+  Future<void> _sendMessage(String message) async {
+    await _sendMessageToIsolate(_sendPort, message);
+  }
+  
+  void start() async {
     print(titleColor('=== МОРСКОЙ БОЙ ==='));
+    
+    // Инициализируем директории для файлов
+    await FileHandler.initializeDirectories();
+    
+    // Логируем начало игры
+    await GameLogger.logGameStart('Игрок 1', 'Игрок 2', boardSize);
 
     print(promptColor('Выберите режим игры:'));
     print('1. Игрок против игрока');
@@ -507,7 +578,7 @@ class BattleshipGame {
       String? input = stdin.readLineSync();
       if (input == '1' || input == '2') {
         gameMode = int.parse(input!);
-        isPlayerVsPlayer = (gameMode == 1); // Устанавливаем флаг режима
+        isPlayerVsPlayer = (gameMode == 1);
         break;
       }
       print(errorColor('Неверный выбор. Введите 1 или 2:'));
@@ -531,11 +602,13 @@ class BattleshipGame {
       player1 = Player(player1Name, boardSize);
       player2 = Player('Компьютер', boardSize, isBot: true);
     }
+    
+    // Отправляем сообщение в изолят
+    await _sendMessage('Игра началась между ${player1.name} и ${player2.name}');
 
     print(titleColor('\n=== РАЗМЕЩЕНИЕ КОРАБЛЕЙ ==='));
     player1.placeShips();
 
-    // Очищаем консоль только в режиме игрок против игрока
     if (isPlayerVsPlayer) {
       _clearConsole();
     }
@@ -549,7 +622,6 @@ class BattleshipGame {
       print(successColor('Компьютер разместил все корабли!'));
     }
 
-    // Очищаем консоль только в режиме игрок против игрока
     if (isPlayerVsPlayer) {
       _clearConsole();
     }
@@ -557,11 +629,20 @@ class BattleshipGame {
     print(titleColor('\n=== НАЧАЛО ИГРЫ ==='));
     currentPlayer = player1;
     opponent = player2;
+    
+    // Создаем данные текущей игры
+    final gameData = GameData(
+      player1Name: player1.name,
+      player2Name: player2.name,
+      player1Ships: player1.board.getShipStatuses(),
+      player2Ships: player2.board.getShipStatuses(),
+    );
+    
+    // Сохраняем данные текущей игры
+    await FileHandler.saveCurrentGameData(gameData);
 
-    // Игровой цикл с возможностью последовательных хитов
     while (!currentPlayer.board.allShipsSunk() &&
         !opponent.board.allShipsSunk()) {
-      // Основной игровой цикл для текущего игрока
       bool playerTurn = true;
 
       while (playerTurn &&
@@ -581,22 +662,27 @@ class BattleshipGame {
         if (!validAttack) {
           if (!currentPlayer.isBot) {
             print(errorColor('Неверная позиция для атаки. Попробуйте снова.'));
+            // Логируем ошибку
+            await GameLogger.logPlayerMoveError(
+              currentPlayer.name, 
+              '${String.fromCharCode('A'.codeUnitAt(0) + attackPos.x)}${attackPos.y + 1}', 
+              'Неверная позиция для атаки'
+            );
           }
           continue;
         }
 
-        // Очищаем консоль только в режиме игрок против игрока
         if (isPlayerVsPlayer) {
           _clearConsole();
         }
 
-        bool hit = false; // Флаг для проверки попадания
+        bool hit = false;
         String result = '';
         if (opponent.board.grid[attackPos.x][attackPos.y] == 'X') {
-          hit = true; // Попадание
+          hit = true;
+          currentPlayer.hits++; // Увеличиваем счетчик попаданий
           result = successColor('ПОПАДАНИЕ!');
 
-          // Проверяем, потоплен ли корабль
           Ship? sunkShip;
           for (var ship in opponent.board.ships) {
             if (ship.positions.contains(attackPos) && ship.isSunk()) {
@@ -608,35 +694,80 @@ class BattleshipGame {
           if (sunkShip != null) {
             result = successColor('ПОПАДАНИЕ! ${sunkShip.name} потоплен!');
           }
+          
+          // Логируем попадание
+          await GameLogger.logPlayerMove(
+            currentPlayer.name, 
+            '${String.fromCharCode('A'.codeUnitAt(0) + attackPos.x)}${attackPos.y + 1}', 
+            'попадание'
+          );
         } else {
+          currentPlayer.misses++; // Увеличиваем счетчик промахов
           result = infoColor('МИМО!');
+          
+          // Логируем промах
+          await GameLogger.logPlayerMove(
+            currentPlayer.name, 
+            '${String.fromCharCode('A'.codeUnitAt(0) + attackPos.x)}${attackPos.y + 1}', 
+            'промах'
+          );
         }
 
         if (!currentPlayer.isBot) {
           print(result);
         }
 
-        // Проверяем победу
+        // Обновляем данные текущей игры
+        if (currentPlayer == player1) {
+          gameData.player1Hits = player1.hits;
+          gameData.player1Misses = player1.misses;
+        } else {
+          gameData.player2Hits = player2.hits;
+          gameData.player2Misses = player2.misses;
+        }
+        
+        // Обновляем статус кораблей
+        if (currentPlayer == player1) {
+          gameData.player1Ships = player1.board.getShipStatuses();
+        } else {
+          gameData.player2Ships = player2.board.getShipStatuses();
+        }
+        
+        // Сохраняем обновленные данные
+        await FileHandler.saveCurrentGameData(gameData);
+
         if (opponent.board.allShipsSunk()) {
           print(successColor('\n${currentPlayer.name} победил!'));
-          return; // Завершаем игру
+          
+          // Логируем завершение игры
+          await GameLogger.logGameEnd(currentPlayer.name, opponent.name);
+          
+          // Обновляем статистику игроков
+          await FileHandler.updatePlayerStats(currentPlayer.name, true);
+          await FileHandler.updatePlayerStats(opponent.name, false);
+          
+          // Очищаем данные текущей игры
+          await FileHandler.clearCurrentGameData();
+          
+          // Отправляем сообщение в изолят
+          await _sendMessage('Игра завершена. Победитель: ${currentPlayer.name}');
+          
+          // Завершаем изолят
+          _isolate.kill();
+          
+          return;
         }
 
-        // Если было попадание, игрок продолжает ход, иначе передаем ход следующему игроку
         if (hit) {
-          // Игрок продолжает ход
           if (!currentPlayer.isBot) {
             print(infoColor('Вы попали! Стреляйте еще раз.'));
           }
-          // Для компьютера также продолжаем ход (но компьютер всегда делает один выстрел за раз)
           playerTurn = true;
         } else {
-          // При промахе завершаем ход игрока
           playerTurn = false;
         }
       }
 
-      // Меняем игрока только если ход завершен (был промах)
       if (!playerTurn) {
         if (isPlayerVsPlayer && !currentPlayer.isBot && !opponent.isBot) {
           _promptNextPlayer(opponent.name);
@@ -670,8 +801,11 @@ class BattleshipGame {
   }
 }
 
-void main(List<String> arguments) {
+void main(List<String> arguments) async {
   print(titleColor('Добро пожаловать в Морской бой!'));
+  
+  // Инициализируем директории для файлов
+  await FileHandler.initializeDirectories();
 
   print(promptColor('Выберите размер поля:'));
   print('1. Маленькое (8x8)');
