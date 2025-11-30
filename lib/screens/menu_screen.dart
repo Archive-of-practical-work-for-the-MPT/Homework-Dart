@@ -72,7 +72,7 @@ class MenuScreen extends StatelessWidget {
             left: 0,
             right: 0,
             child: Image.asset(
-              "assets/images/backgraund.png",
+              "assets/images/background.png",
               height: 1000,
               fit: BoxFit.cover,
             ),
@@ -154,7 +154,7 @@ class MenuScreen extends StatelessWidget {
                               suffixIcon: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Image.asset(
-                                  "assets/images/vopr.png",
+                                  "assets/images/search.png",
                                   width: 20,
                                   height: 20,
                                 ),
@@ -190,31 +190,31 @@ class MenuScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
                       menuItem(
-                        "assets/images/Salad.png",
+                        "assets/images/salad.png",
                         "Original Salad",
                         "Lovy Food",
                         8,
                       ),
                       menuItem(
-                        "assets/images/FSalad.png",
+                        "assets/images/fresh.png",
                         "Fresh Salad",
                         "Cloudy Resto",
                         10,
                       ),
                       menuItem(
-                        "assets/images/Ice.png",
+                        "assets/images/icecream.png",
                         "Yummie Ice Cream",
                         "Circlo Resto",
                         6,
                       ),
                       menuItem(
-                        "assets/images/Vegan.png",
+                        "assets/images/vegan.png",
                         "Vegan Special",
                         "Haty Food",
                         11,
                       ),
                       menuItem(
-                        "assets/images/Pasta.png",
+                        "assets/images/pasta.png",
                         "Mixed Pasta",
                         "Recto Food",
                         13,

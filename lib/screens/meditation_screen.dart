@@ -24,7 +24,7 @@ class MeditationScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
                       image: const DecorationImage(
-                        image: AssetImage('assets/images/chel_read.png'),
+                        image: AssetImage('assets/images/lake_music.png'),
                         fit: BoxFit.cover,
                       ),
                     ),
