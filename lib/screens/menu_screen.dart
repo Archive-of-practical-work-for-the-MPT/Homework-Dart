@@ -5,11 +5,13 @@ class MenuScreen extends StatelessWidget {
 
   Widget menuItem(String image, String title, String subtitle, int price) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(14),
+      width: 380,
+      height: 88,
+      margin: const EdgeInsets.only(bottom: 35),
+      padding: const EdgeInsets.fromLTRB(12, 12, 32, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -19,6 +21,7 @@ class MenuScreen extends StatelessWidget {
         ],
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(18),
@@ -62,8 +65,6 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF6F7),
-
       body: Stack(
         children: [
           Positioned(
@@ -72,7 +73,7 @@ class MenuScreen extends StatelessWidget {
             right: 0,
             child: Image.asset(
               "assets/images/backgraund.png",
-              height: 230,
+              height: 1000,
               fit: BoxFit.cover,
             ),
           ),
@@ -228,10 +229,22 @@ class MenuScreen extends StatelessWidget {
       ),
 
       bottomNavigationBar: Container(
-        height: 100,
+        width: 380,
+        height: 91,
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: const Color.fromARGB(
+              255,
+              255,
+              255,
+              255,
+            ).withValues(alpha: 1),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
@@ -241,7 +254,7 @@ class MenuScreen extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             navItem(Icons.home, true, label: "Home"),
             navItem(Icons.shopping_cart, false),
@@ -250,6 +263,7 @@ class MenuScreen extends StatelessWidget {
           ],
         ),
       ),
+      bottomSheet: null,
     );
   }
 
