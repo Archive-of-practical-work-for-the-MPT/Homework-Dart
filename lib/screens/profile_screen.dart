@@ -102,6 +102,11 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    Container(
+                      width: 1,
+                      height: 67,
+                      color: Color(0xFFEBEEF2),
+                    ),
                     Column(
                       children: const [
                         Text(
@@ -118,6 +123,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    Container(width: 1, height: 67, color: Color(0xFFEBEEF2)),
                     Column(
                       children: const [
                         Text(
@@ -139,41 +145,52 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
+                Container(
+                  width: 380,
+                  height: 1,
+                  color: const Color(0xFFEBEEF2),
+                ),
+
+                const SizedBox(height: 20),
+
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: null,
-                        icon: const Icon(Icons.person_add, size: 20),
-                        label: const Text('Follow'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainColor,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: mainColor,
-                          disabledForegroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 0),
-                          minimumSize: const Size.fromHeight(52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.person_add, size: 20),
+                          label: const Text('Follow'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: mainColor,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: mainColor,
+                            disabledForegroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: null,
-                        icon: const Icon(Icons.message, size: 20),
-                        label: const Text('Messages'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: mainColor,
-                          disabledForegroundColor: mainColor,
-                          side: const BorderSide(color: mainColor),
-                          padding: const EdgeInsets.symmetric(vertical: 0),
-                          minimumSize: const Size.fromHeight(52),
-
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: null,
+                          icon: const Icon(Icons.message, size: 20),
+                          label: const Text('Messages'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: mainColor,
+                            disabledForegroundColor: mainColor,
+                            side: const BorderSide(color: mainColor),
+                            padding: const EdgeInsets.symmetric(vertical: 0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                           ),
                         ),
                       ),
@@ -181,12 +198,22 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
+
+                Container(
+                  width: 380,
+                  height: 1,
+                  color: const Color(0xFFEBEEF2),
+                ),
+
+                const SizedBox(height: 20),
 
                 Row(
                   children: [
                     Expanded(child: _tab('About', true)),
+                    const SizedBox(width: 8),
                     Expanded(child: _tab('Events', false)),
+                    const SizedBox(width: 8),
                     Expanded(child: _tab('Reviews', false)),
                   ],
                 ),
@@ -248,6 +275,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _tab(String text, bool active) {
     return Container(
+      height: 43,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: active ? mainColor : Colors.white,
