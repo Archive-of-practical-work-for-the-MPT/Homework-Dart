@@ -3,10 +3,16 @@
 
 Навигация:
 
+Первый семестр:
+
 * [Практическая работа 1](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart) - Крестики нолики
 * [Практическая работа 2](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/seabattle) - Морской бой
 * [Практическая работа 3](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/filesave) - Работа с файлами
 * [Практическая работа 4](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/screens) - Макеты
+
+Второй семестр:
+
+* [Практическая работа 5](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/notes) - Заметки
 
 # Практическая работа 1 - Крестики нолики
 
