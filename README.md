@@ -29,7 +29,7 @@
 ## Демонстрация
 
 <p align="center">
-      <img src="https://github.com/user-attachments/assets/" alt="Демонстрация" width="500">
+      <img src="https://github.com/user-attachments/assets/128c187b-e05e-4380-a500-9efefaed8062" alt="Демонстрация" width="500">
 </p>
 
 ## Вывод
