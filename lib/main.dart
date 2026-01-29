@@ -40,7 +40,26 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SpellCheck App',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: ThemeData.dark().copyWith(
+        primaryColor: Colors.blue,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E1E1E),
+          foregroundColor: Colors.white,
+        ),
+        cardTheme: const CardThemeData(color: Color(0xFF1E1E1E), elevation: 4),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          fillColor: Color(0xFF2D2D2D),
+          border: OutlineInputBorder(),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.blue),
+          ),
+        ),
+      ),
       home: const SpellCheckScreen(),
     );
   }

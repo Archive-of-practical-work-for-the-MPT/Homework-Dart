@@ -13,15 +13,16 @@ class SpellCheckWidget extends StatefulWidget {
 }
 
 class _SpellCheckWidgetState extends State<SpellCheckWidget> {
-  final NinjaSpellCheckService _service = GetIt.instance<NinjaSpellCheckService>();
+  final NinjaSpellCheckService _service =
+      GetIt.instance<NinjaSpellCheckService>();
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   SpellCheckModel? _result;
   bool _isLoading = false;
   String? _errorMessage;
   List<HistoryItem> _history = [];
-  
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +51,7 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
   /// Проверка орфографии
   Future<void> _checkSpelling() async {
     final text = _textController.text.trim();
-    
+
     if (text.isEmpty) {
       setState(() {
         _errorMessage = 'Введите текст для проверки';
@@ -65,20 +66,23 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
 
     try {
       final result = await _service.checkSpelling(text);
-      
+
       if (mounted) {
         setState(() {
           _result = result;
           _isLoading = false;
-          
+
           if (result != null) {
             // Добавляем в историю
-            _history.insert(0, HistoryItem(
-              original: result.original,
-              corrected: result.corrected,
-              timestamp: DateTime.now(),
-            ));
-            
+            _history.insert(
+              0,
+              HistoryItem(
+                original: result.original,
+                corrected: result.corrected,
+                timestamp: DateTime.now(),
+              ),
+            );
+
             // Ограничиваем историю 10 элементами
             if (_history.length > 10) {
               _history.removeLast();
@@ -157,27 +161,24 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
           children: [
             const Text(
               'Введите текст для проверки орфографии:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _textController,
               maxLines: 4,
+              style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                 hintText: 'Введите текст здесь...',
+                hintStyle: TextStyle(color: Colors.grey),
                 border: OutlineInputBorder(),
-                filled: true,
-                fillColor: Color(0xFFF5F5F5),
               ),
             ),
             if (_errorMessage != null) ...[
               const SizedBox(height: 8),
               Text(
                 _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: Colors.redAccent),
               ),
             ],
           ],
@@ -194,7 +195,7 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
       children: [
         ElevatedButton.icon(
           onPressed: _isLoading ? null : _checkSpelling,
-          icon: _isLoading 
+          icon: _isLoading
               ? const SizedBox(
                   width: 16,
                   height: 16,
@@ -262,8 +263,10 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
           Container(
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+              color: const Color(0xFF2D2D2D),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(8),
+              ),
             ),
             child: const TabBar(
               tabs: [
@@ -275,14 +278,13 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                border: Border.all(color: const Color(0xFF444444)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(8),
+                ),
               ),
               child: TabBarView(
-                children: [
-                  _buildResultTab(),
-                  _buildHistoryTab(),
-                ],
+                children: [_buildResultTab(), _buildHistoryTab()],
               ),
             ),
           ),
@@ -294,9 +296,7 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
   /// Вкладка с результатом
   Widget _buildResultTab() {
     if (_result == null) {
-      return const Center(
-        child: Text('Нет результатов для отображения'),
-      );
+      return const Center(child: Text('Нет результатов для отображения'));
     }
 
     return SingleChildScrollView(
@@ -312,7 +312,9 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            ..._result!.corrections.map((correction) => _buildCorrectionItem(correction)),
+            ..._result!.corrections.map(
+              (correction) => _buildCorrectionItem(correction),
+            ),
           ],
         ],
       ),
@@ -333,8 +335,8 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
           padding: const EdgeInsets.all(12),
           margin: const EdgeInsets.only(top: 8, bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.red[50],
-            border: Border.all(color: Colors.red[200]!),
+            color: const Color(0xFF331111),
+            border: Border.all(color: Colors.red.withOpacity(0.3)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(_result!.original),
@@ -348,8 +350,8 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
           padding: const EdgeInsets.all(12),
           margin: const EdgeInsets.only(top: 8),
           decoration: BoxDecoration(
-            color: Colors.green[50],
-            border: Border.all(color: Colors.green[200]!),
+            color: const Color(0xFF113311),
+            border: Border.all(color: Colors.green.withOpacity(0.3)),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(_result!.corrected),
@@ -370,9 +372,12 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.red[100],
+                    color: const Color(0xFF442222),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -384,9 +389,12 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
                 const Icon(Icons.arrow_forward, color: Colors.grey),
                 const SizedBox(width: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.green[100],
+                    color: const Color(0xFF224422),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -398,15 +406,20 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
             ),
             if (correction.candidates.length > 1) ...[
               const SizedBox(height: 8),
-              const Text('Другие варианты:', style: TextStyle(fontStyle: FontStyle.italic)),
+              const Text(
+                'Другие варианты:',
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
               Wrap(
                 spacing: 8,
                 children: correction.candidates
                     .where((candidate) => candidate != correction.correction)
-                    .map((candidate) => Chip(
-                          label: Text(candidate),
-                          backgroundColor: Colors.blue[100],
-                        ))
+                    .map(
+                      (candidate) => Chip(
+                        label: Text(candidate),
+                        backgroundColor: const Color(0xFF223344),
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -486,7 +499,7 @@ class _SpellCheckWidgetState extends State<SpellCheckWidget> {
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inMinutes < 1) {
       return 'Только что';
     } else if (difference.inHours < 1) {
