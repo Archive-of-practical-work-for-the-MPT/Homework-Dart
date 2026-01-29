@@ -14,6 +14,7 @@
 
 * [Практическая работа 5](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/notes) - Заметки
 * [Практическая работа 6](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/cinematracker) - Мини кинопоиск
+* [Практическая работа 7](https://github.com/Archive-of-practical-work-for-the-MPT/Homework-Dart/tree/ninja-api) - Ninja API
 
 # Практическая работа 1 - Крестики нолики
 
