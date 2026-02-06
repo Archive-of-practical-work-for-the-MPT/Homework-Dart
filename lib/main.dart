@@ -76,10 +76,7 @@ class _MediaAppState extends State<MediaApp> {
       home: Scaffold(
         body: IndexedStack(
           index: _currentIndex,
-          children: const [
-            GalleryScreen(),
-            MusicScreen(),
-          ],
+          children: const [GalleryScreen(), MusicScreen()],
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
@@ -136,9 +133,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
   }
 
-  Future<void> _addMedia({
-    required bool isVideo,
-  }) async {
+  Future<void> _addMedia({required bool isVideo}) async {
     final controller = TextEditingController();
 
     final url = await showDialog<String>(
@@ -167,7 +162,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
               child: const Text('Отмена'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
               child: const Text('Сохранить'),
             ),
           ],
@@ -233,20 +229,23 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Галерея (лента)', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Галерея',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
         surfaceTintColor: Colors.transparent,
       ),
       body: ValueListenableBuilder(
         valueListenable: _galleryBox.listenable(),
         builder: (context, Box box, _) {
-          final keys = box.keys
-              .where((k) => box.get(k) != null)
-              .cast<dynamic>()
-              .toList()
-            ..sort((a, b) => _compareKeys(b, a));
+          final keys =
+              box.keys.where((k) => box.get(k) != null).cast<dynamic>().toList()
+                ..sort((a, b) => _compareKeys(b, a));
           final items = keys
-              .map<Map<dynamic, dynamic>>((k) => box.get(k) as Map<dynamic, dynamic>)
+              .map<Map<dynamic, dynamic>>(
+                (k) => box.get(k) as Map<dynamic, dynamic>,
+              )
               .toList();
 
           if (items.isEmpty) {
@@ -254,11 +253,21 @@ class _GalleryScreenState extends State<GalleryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.photo_size_select_actual, size: 80, color: Colors.grey[400]),
+                  Icon(
+                    Icons.photo_size_select_actual,
+                    size: 80,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
-                  const Text('Пока нет медиа', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                  const Text(
+                    'Пока нет медиа',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
                   const SizedBox(height: 8),
-                  const Text('Добавьте фото или видео', style: TextStyle(color: Colors.grey)),
+                  const Text(
+                    'Добавьте фото или видео',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             );
@@ -279,7 +288,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
               final url = data['url'] as String? ?? '';
               final latitude = (data['latitude'] as num?)?.toDouble();
               final longitude = (data['longitude'] as num?)?.toDouble();
-              final createdAt = DateTime.tryParse(data['createdAt'] as String? ?? '');
+              final createdAt = DateTime.tryParse(
+                data['createdAt'] as String? ?? '',
+              );
 
               return Card(
                 clipBehavior: Clip.hardEdge,
@@ -291,17 +302,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   fit: StackFit.expand,
                   children: [
                     isVideo
-                        ? VideoFeedItem(
-                            key: ValueKey('video_$index'),
-                            url: url,
-                          )
+                        ? VideoFeedItem(key: ValueKey('video_$index'), url: url)
                         : Image.network(
                             url,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 color: Colors.grey[300],
-                                child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
                               );
                             },
                           ),
@@ -315,7 +327,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
                           ),
                         ),
                         child: Column(
@@ -392,6 +407,7 @@ class VideoFeedItem extends StatefulWidget {
 class _VideoFeedItemState extends State<VideoFeedItem> {
   late final VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _isPlaying = false;
 
   @override
   void initState() {
@@ -408,6 +424,10 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
   }
 
   void _onControllerUpdate() {
+    // Track the playing state based on the controller state
+    if (_controller.value.isPlaying != _isPlaying) {
+      _isPlaying = _controller.value.isPlaying;
+    }
     if (mounted) setState(() {});
   }
 
@@ -430,92 +450,116 @@ class _VideoFeedItemState extends State<VideoFeedItem> {
     final width = size.width > 0 ? size.width : 16.0;
     final height = size.height > 0 ? size.height : 9.0;
 
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        Expanded(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              setState(() {
-                if (_controller.value.isPlaying) {
-                  _controller.pause();
-                } else {
-                  _controller.play();
-                }
-              });
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: width,
-                    height: height,
-                    child: VideoPlayer(_controller),
-                  ),
+        Column(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  setState(() {
+                    if (_controller.value.isPlaying) {
+                      _controller.pause();
+                      _isPlaying = false;
+                    } else {
+                      _controller.play();
+                      _isPlaying = true;
+                    }
+                  });
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: width,
+                        height: height,
+                        child: VideoPlayer(_controller),
+                      ),
+                    ),
+                    if (!_controller.value.isPlaying)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black45,
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          size: 48,
+                          color: Colors.white,
+                        ),
+                      ),
+                    if (_controller.value.isPlaying)
+                      Positioned(
+                        top: 8, // Moved to the top of the video
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.black45,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: const Icon(
+                            Icons.pause,
+                            size: 32,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                if (!_controller.value.isPlaying)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black45,
-                      borderRadius: BorderRadius.circular(40),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: const Icon(
-                      Icons.play_arrow,
-                      size: 48,
-                      color: Colors.white,
-                    ),
-                  ),
-                if (_controller.value.isPlaying)
-                  Positioned(
-                    bottom: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: const Icon(
-                        Icons.pause,
-                        size: 32,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
+          ],
+        ),
+        // Position the slider higher up, well above the text area
+        Positioned(
+          bottom:
+              100, // Moved higher (from 50 to 100) to be well above the text
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: duration.inMilliseconds > 0
+                ? Column(
+                    children: [
+                      Slider(
+                        value: position.inMilliseconds
+                            .clamp(0, duration.inMilliseconds)
+                            .toDouble(),
+                        max: duration.inMilliseconds.toDouble(),
+                        onChanged: (value) async {
+                          final newPosition = Duration(
+                            milliseconds: value.toInt(),
+                          );
+                          await _controller.seekTo(newPosition);
+                          // Ensure playback continues if it was playing before seeking
+                          if (_isPlaying) {
+                            await _controller.play();
+                          }
+                        },
+                        activeColor: Colors.purple,
+                        inactiveColor: Colors.grey[300],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(_formatDuration(position)),
+                            Text(_formatDuration(duration)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : null,
           ),
         ),
-        if (duration.inMilliseconds > 0)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                Slider(
-                  value: position.inMilliseconds.clamp(0, duration.inMilliseconds).toDouble(),
-                  max: duration.inMilliseconds.toDouble(),
-                  onChanged: (value) {
-                    _controller.seekTo(Duration(milliseconds: value.toInt()));
-                  },
-                  activeColor: Colors.purple,
-                  inactiveColor: Colors.grey[300],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_formatDuration(position)),
-                      Text(_formatDuration(duration)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
       ],
     );
   }
@@ -568,7 +612,10 @@ class _MusicScreenState extends State<MusicScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text('Добавить аудио по URL', style: TextStyle(fontWeight: FontWeight.w600)),
+          title: const Text(
+            'Добавить аудио по URL',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
@@ -584,7 +631,8 @@ class _MusicScreenState extends State<MusicScreen> {
               child: const Text('Отмена'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
               child: const Text('Сохранить'),
             ),
           ],
@@ -631,10 +679,9 @@ class _MusicScreenState extends State<MusicScreen> {
       _player = AudioPlayer();
       _player!.playerStateStream.listen(_onPlayerState);
       await _player!.setAudioSource(AudioSource.uri(Uri.parse(url)));
-      final keysList = _musicBox.keys
-          .where((k) => _musicBox.get(k) != null)
-          .toList()
-        ..sort((a, b) => _compareKeys(b, a));
+      final keysList =
+          _musicBox.keys.where((k) => _musicBox.get(k) != null).toList()
+            ..sort((a, b) => _compareKeys(b, a));
       final idx = keysList.indexWhere((k) => _keyEquals(k, hiveKey));
       setState(() {
         _currentIndex = idx >= 0 ? idx : null;
@@ -674,7 +721,10 @@ class _MusicScreenState extends State<MusicScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Музыка', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Музыка',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
         surfaceTintColor: Colors.transparent,
       ),
@@ -687,7 +737,10 @@ class _MusicScreenState extends State<MusicScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Добавить аудио'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -695,13 +748,16 @@ class _MusicScreenState extends State<MusicScreen> {
             child: ValueListenableBuilder(
               valueListenable: _musicBox.listenable(),
               builder: (context, Box box, _) {
-                final keys = box.keys
-                    .where((k) => box.get(k) != null)
-                    .cast<dynamic>()
-                    .toList()
-                  ..sort((a, b) => _compareKeys(b, a));
+                final keys =
+                    box.keys
+                        .where((k) => box.get(k) != null)
+                        .cast<dynamic>()
+                        .toList()
+                      ..sort((a, b) => _compareKeys(b, a));
                 final items = keys
-                    .map<Map<dynamic, dynamic>>((k) => box.get(k) as Map<dynamic, dynamic>)
+                    .map<Map<dynamic, dynamic>>(
+                      (k) => box.get(k) as Map<dynamic, dynamic>,
+                    )
                     .toList();
 
                 if (items.isEmpty) {
@@ -709,11 +765,24 @@ class _MusicScreenState extends State<MusicScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.music_note, size: 80, color: Colors.grey[400]),
+                        Icon(
+                          Icons.music_note,
+                          size: 80,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
-                        const Text('Нет аудиозаписей', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                        const Text(
+                          'Нет аудиозаписей',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        const Text('Добавьте URL', style: TextStyle(color: Colors.grey)),
+                        const Text(
+                          'Добавьте URL',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   );
@@ -722,14 +791,19 @@ class _MusicScreenState extends State<MusicScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: items.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final hiveKey = keys[index];
                     final data = items[index];
                     final trackUrl = (data['url'] as String? ?? '').trim();
-                    final createdAt = DateTime.tryParse(data['createdAt'] as String? ?? '');
+                    final createdAt = DateTime.tryParse(
+                      data['createdAt'] as String? ?? '',
+                    );
                     final isCurrent = _currentPlayingUrl == trackUrl;
-                    final truncatedUrl = trackUrl.length > 50 ? '${trackUrl.substring(0, 50)}...' : trackUrl;
+                    final truncatedUrl = trackUrl.length > 50
+                        ? '${trackUrl.substring(0, 50)}...'
+                        : trackUrl;
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
@@ -738,24 +812,33 @@ class _MusicScreenState extends State<MusicScreen> {
                       ),
                       elevation: 2,
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         leading: CircleAvatar(
-                          backgroundColor: isCurrent ? Colors.purple : Colors.grey[300],
+                          backgroundColor: isCurrent
+                              ? Colors.purple
+                              : Colors.grey[300],
                           child: Icon(
-                            isCurrent && (_player?.playing ?? false) 
-                              ? Icons.pause 
-                              : Icons.play_arrow,
+                            isCurrent && (_player?.playing ?? false)
+                                ? Icons.pause
+                                : Icons.play_arrow,
                             color: isCurrent ? Colors.white : Colors.grey[600],
                             size: 20,
                           ),
                         ),
                         title: Text(truncatedUrl),
                         subtitle: createdAt != null
-                            ? Text('Добавлено: ${createdAt.toLocal().toString().split('.')[0]}')
+                            ? Text(
+                                'Добавлено: ${createdAt.toLocal().toString().split('.')[0]}',
+                              )
                             : null,
                         trailing: IconButton(
                           icon: Icon(
-                            isCurrent && (_player?.playing ?? false) ? Icons.pause : Icons.play_arrow,
+                            isCurrent && (_player?.playing ?? false)
+                                ? Icons.pause
+                                : Icons.play_arrow,
                             color: Colors.purple,
                           ),
                           onPressed: () {
@@ -787,7 +870,9 @@ class _MusicScreenState extends State<MusicScreen> {
             builder: (context, snapshot) {
               final position = snapshot.data ?? Duration.zero;
               final duration = _player?.duration ?? Duration.zero;
-              final maxMs = duration.inMilliseconds > 0 ? duration.inMilliseconds : 1;
+              final maxMs = duration.inMilliseconds > 0
+                  ? duration.inMilliseconds
+                  : 1;
 
               if (_currentPlayingUrl == null) {
                 return const SizedBox.shrink();
