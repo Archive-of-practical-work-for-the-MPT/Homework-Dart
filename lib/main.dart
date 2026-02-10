@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:location/location.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
+import 'package:file_picker/file_picker.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -603,6 +607,60 @@ class _MusicScreenState extends State<MusicScreen> {
   }
 
   Future<void> _addTrack() async {
+    try {
+      // Show a dialog to choose between URL and file
+      final choice = await showDialog<String>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'Добавить аудио',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            content: const Text('Выберите способ добавления аудио:'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop('url'),
+                child: const Text('По URL'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop('file'),
+                child: const Text('Из файла'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Отмена'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (choice == 'url') {
+        await _addTrackByUrl();
+      } else if (choice == 'file') {
+        await _addTrackByFile();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _addTrackByUrl() async {
     final controller = TextEditingController();
 
     final url = await showDialog<String>(
@@ -642,50 +700,198 @@ class _MusicScreenState extends State<MusicScreen> {
 
     if (url == null || url.isEmpty) return;
 
-    final key = DateTime.now().millisecondsSinceEpoch.toString();
-    await _musicBox.put(key, {
-      'url': url,
-      'createdAt': DateTime.now().toIso8601String(),
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Трек добавлен'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+    try {
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Добавление трека...'),
+            backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
           ),
-        ),
+        );
+      }
+
+      final key = DateTime.now().millisecondsSinceEpoch.toString();
+      await _musicBox.put(key, {
+        'url': url,
+        'type': 'url',
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Трек добавлен'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _addTrackByFile() async {
+    try {
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Выбор файла...'),
+            backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+
+      // Pick audio file using file picker
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+        allowMultiple: false,
+        withData: true, // This ensures bytes are available on web
       );
+
+      if (result == null || result.files.single.bytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Файл не выбран или недоступен'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      final fileName = result.files.single.name;
+      final fileBytes = result.files.single.bytes!;
+      
+      // For web, we'll store the bytes and filename
+      // For mobile, we can try to get the path
+      String? filePath;
+      if (result.files.single.path != null) {
+        filePath = result.files.single.path!;
+      }
+
+      final key = DateTime.now().millisecondsSinceEpoch.toString();
+      await _musicBox.put(key, {
+        'filePath': filePath ?? '', // May be empty on web
+        'fileName': fileName,
+        'fileBytes': fileBytes, // Store bytes for web playback
+        'type': 'file',
+        'platform': kIsWeb ? 'web' : 'mobile',
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(kIsWeb 
+                ? 'Трек добавлен (веб версия)' 
+                : 'Трек добавлен'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _playTrackByKey(dynamic hiveKey) async {
-    final data = _musicBox.get(hiveKey) as Map<dynamic, dynamic>?;
-    if (data == null) return;
-    final url = (data['url'] as String? ?? '').trim();
-    if (url.isEmpty) return;
     try {
-      final isSameTrack = _currentPlayingUrl == url;
+      final data = _musicBox.get(hiveKey) as Map<dynamic, dynamic>?;
+      if (data == null) return;
+      
+      final type = (data['type'] as String? ?? 'url');
+      String trackIdentifier = '';
+      AudioSource? audioSource;
+      
+      if (type == 'file') {
+        final platform = (data['platform'] as String? ?? 'mobile');
+        
+        if (platform == 'web') {
+          // Handle web files using bytes
+          final fileBytes = data['fileBytes'] as Uint8List?;
+          final fileName = (data['fileName'] as String? ?? 'audio');
+          
+          if (fileBytes == null || fileBytes.isEmpty) {
+            throw Exception('Данные файла недоступны');
+          }
+          
+          // Create a blob URL for web playback
+          audioSource = AudioSource.uri(Uri.parse('data:audio/*;base64,${base64Encode(fileBytes)}'));
+          trackIdentifier = fileName;
+        } else {
+          // Handle mobile files using file path
+          final filePath = (data['filePath'] as String? ?? '').trim();
+          if (filePath.isEmpty) return;
+          audioSource = AudioSource.uri(Uri.file(filePath));
+          trackIdentifier = filePath;
+        }
+      } else {
+        final url = (data['url'] as String? ?? '').trim();
+        if (url.isEmpty) return;
+        audioSource = AudioSource.uri(Uri.parse(url));
+        trackIdentifier = url;
+      }
+      
+      final isSameTrack = _currentPlayingUrl == trackIdentifier;
       if (isSameTrack && _player != null && !_player!.playing) {
-        setState(() => _currentPlayingUrl = url);
+        setState(() => _currentPlayingUrl = trackIdentifier);
         await _player!.play();
         return;
       }
+      
       // При смене трека — новый плеер, чтобы гарантированно играл выбранный трек
       _player?.dispose();
       _player = AudioPlayer();
       _player!.playerStateStream.listen(_onPlayerState);
-      await _player!.setAudioSource(AudioSource.uri(Uri.parse(url)));
+      await _player!.setAudioSource(audioSource);
       final keysList =
           _musicBox.keys.where((k) => _musicBox.get(k) != null).toList()
             ..sort((a, b) => _compareKeys(b, a));
       final idx = keysList.indexWhere((k) => _keyEquals(k, hiveKey));
       setState(() {
         _currentIndex = idx >= 0 ? idx : null;
-        _currentPlayingUrl = url;
+        _currentPlayingUrl = trackIdentifier;
       });
       await _player!.play();
     } catch (e) {
@@ -780,7 +986,7 @@ class _MusicScreenState extends State<MusicScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Добавьте URL',
+                          'Добавьте URL или файл',
                           style: TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -796,14 +1002,35 @@ class _MusicScreenState extends State<MusicScreen> {
                   itemBuilder: (context, index) {
                     final hiveKey = keys[index];
                     final data = items[index];
-                    final trackUrl = (data['url'] as String? ?? '').trim();
+                    final type = (data['type'] as String? ?? 'url');
+                    String trackIdentifier = '';
+                    String displayName = '';
+                    
+                    if (type == 'file') {
+                      final platform = (data['platform'] as String? ?? 'mobile');
+                      final fileName = (data['fileName'] as String? ?? 'Без названия');
+                      
+                      if (platform == 'web') {
+                        trackIdentifier = fileName;
+                        displayName = '$fileName (веб)';
+                      } else {
+                        final filePath = (data['filePath'] as String? ?? '').trim();
+                        trackIdentifier = filePath;
+                        displayName = fileName;
+                      }
+                    } else {
+                      final url = (data['url'] as String? ?? '').trim();
+                      trackIdentifier = url;
+                      displayName = url.length > 50 ? '${url.substring(0, 50)}...' : url;
+                    }
+                    
                     final createdAt = DateTime.tryParse(
                       data['createdAt'] as String? ?? '',
                     );
-                    final isCurrent = _currentPlayingUrl == trackUrl;
-                    final truncatedUrl = trackUrl.length > 50
-                        ? '${trackUrl.substring(0, 50)}...'
-                        : trackUrl;
+                    final isCurrent = _currentPlayingUrl == trackIdentifier;
+                    final truncatedUrl = displayName.length > 50
+                        ? '${displayName.substring(0, 50)}...'
+                        : displayName;
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
