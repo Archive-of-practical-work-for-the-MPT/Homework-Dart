@@ -1,16 +1,33 @@
-# Firebase
+# Практическая работа 9 - Создание Firebase проекта
 
-A new Flutter project.
+## Описание
 
-## Getting Started
+Как сделать чтобы работало?
+- Скачайте расширение Dart и Flutter в VSC
+- Запустите через `F5` в удобном вам эмуляторе
 
-This project is a starting point for a Flutter application.
+Возможны сбои в Url на некоторых устройствах - причина не ясна.
 
-A few resources to get you started if this is your first Flutter project:
+## Цель
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Разработать приложение на фрейморвке Flutter с использованием Firebase, где необходимо реализовать авторизацию и регистрацию, окно для просмотра постов, окно для создания, удаления и изменения поста.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Задание
+
+1. Авторизация, с возможностью перехода на окно регистрации, при успешной авторизации переход в основную часть приложения
+
+2. Регистрация, с переходом на окно авторизации
+
+3. Окно для просмотра постов с возможностью на переход к окнам добавления, изменения, удаления поста. Посты должны состоять из: 
+- Обязательно - заголовок, текст, почта автора поста
+- По желанию - дата и время, картинка
+не имеет значения под каким именно пользователем вы вошли в систему, список постов должен быть одинаковым для всех.
+
+## Демонстрация
+
+<p align="center">
+      <img src="https://github.com/user-attachments/assets/4b98cc80-49c7-4083-8bc2-4b6e33f25fbb" alt="Демонстрация" width="300">
+</p>
+
+## Вывод
+Было разработано приложение на фрейморвке Flutter с использованием Firebase, где были реализованы авторизация и регистрация, окно для просмотра постов, окно для создания, удаления и изменения поста.
