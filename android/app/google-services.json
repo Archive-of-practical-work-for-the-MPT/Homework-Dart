@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "390282525436",
+    "project_id": "pract9-9c1b4",
+    "storage_bucket": "pract9-9c1b4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:390282525436:android:e01cfacc8a8da044437579",
+        "android_client_info": {
+          "package_name": "com.example.prakt9"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8UHn3s3eIUJ65uBKKjeKPSDPvyCt8hnY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
