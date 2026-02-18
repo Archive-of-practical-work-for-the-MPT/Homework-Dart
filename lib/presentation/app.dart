@@ -9,8 +9,9 @@ import '../data/repositories/in_memory_auth_repository.dart';
 import '../data/repositories/in_memory_deck_repository.dart';
 import '../data/services/dummy_notification_service.dart';
 import 'auth/auth_cubit.dart';
-import 'home/home_page.dart';
 import 'auth/login_page.dart';
+import 'home/home_page.dart';
+import 'theme/theme_cubit.dart';
 
 class LaLaLanguageApp extends StatelessWidget {
   const LaLaLanguageApp({super.key});
@@ -27,13 +28,26 @@ class LaLaLanguageApp extends StatelessWidget {
         RepositoryProvider<DeckRepository>.value(value: deckRepository),
         RepositoryProvider<NotificationService>.value(value: notificationService),
       ],
-      child: BlocProvider(
-        create: (_) => AuthCubit(authRepository)..init(),
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'LaLaLanguage',
-          theme: buildAppTheme(),
-          home: const _RootRouter(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthCubit>(
+            create: (_) => AuthCubit(authRepository)..init(),
+          ),
+          BlocProvider<ThemeCubit>(
+            create: (_) => ThemeCubit(),
+          ),
+        ],
+        child: BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, themeMode) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'LaLaLanguage',
+              theme: buildLightTheme(),
+              darkTheme: buildDarkTheme(),
+              themeMode: themeMode,
+              home: const _RootRouter(),
+            );
+          },
         ),
       ),
     );

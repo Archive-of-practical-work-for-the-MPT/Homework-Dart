@@ -9,6 +9,7 @@ import '../decks/decks_cubit.dart';
 import '../decks/decks_page.dart';
 import '../stats/stats_cubit.dart';
 import '../stats/stats_page.dart';
+import '../theme/theme_cubit.dart';
 import '../training/training_cubit.dart';
 import '../training/training_page.dart';
 import 'home_cubit.dart';
@@ -48,14 +49,26 @@ class _HomeScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocBuilder<HomeCubit, HomeState>(
       builder: (context, state) {
+        final themeMode = context.watch<ThemeCubit>().state;
+
         return Scaffold(
           appBar: AppBar(
             title: const Text('LaLaLanguage'),
             actions: [
+              IconButton(
+                tooltip: themeMode == ThemeMode.light
+                    ? 'Включить тёмную тему'
+                    : 'Включить светлую тему',
+                icon: Icon(
+                  themeMode == ThemeMode.light
+                      ? Icons.dark_mode_outlined
+                      : Icons.light_mode_outlined,
+                ),
+                onPressed: () =>
+                    context.read<ThemeCubit>().toggle(),
+              ),
               IconButton(
                 tooltip: 'Напоминание о повторении',
                 icon: const Icon(Icons.notifications_outlined),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../app.dart';
+import '../theme/theme_cubit.dart';
 import 'auth_cubit.dart';
 
 class LoginPage extends StatefulWidget {
@@ -58,6 +58,27 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Builder(
+                      builder: (context) {
+                        final themeMode =
+                            context.watch<ThemeCubit>().state;
+                        return IconButton(
+                          tooltip: themeMode == ThemeMode.light
+                              ? 'Включить тёмную тему'
+                              : 'Включить светлую тему',
+                          icon: Icon(
+                            themeMode == ThemeMode.light
+                                ? Icons.dark_mode_outlined
+                                : Icons.light_mode_outlined,
+                          ),
+                          onPressed: () =>
+                              context.read<ThemeCubit>().toggle(),
+                        );
+                      },
+                    ),
+                  ),
                   Text(
                     'LaLaLanguage',
                     style: theme.textTheme.displaySmall?.copyWith(
