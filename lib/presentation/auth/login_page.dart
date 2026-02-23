@@ -25,6 +25,110 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _showForgotPasswordDialog() async {
+    final emailController = TextEditingController(text: _emailController.text);
+    final formKey = GlobalKey<FormState>();
+    var isSending = false;
+
+    if (!mounted) return;
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Восстановление пароля'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Введите email — мы отправим ссылку для сброса пароля.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'you@example.com',
+                    ),
+                    validator: (value) {
+                      final v = value?.trim() ?? '';
+                      if (v.isEmpty) return 'Введите email';
+                      if (!v.contains('@') || !v.contains('.')) {
+                        return 'Некорректный email';
+                      }
+                      return null;
+                    },
+                    enabled: !isSending,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSending ? null : () => Navigator.pop(context, false),
+                child: const Text('Отмена'),
+              ),
+              FilledButton(
+                onPressed: isSending
+                    ? null
+                    : () async {
+                        if (!formKey.currentState!.validate()) return;
+                        setDialogState(() => isSending = true);
+                        try {
+                          await context.read<AuthCubit>().sendPasswordReset(
+                                emailController.text,
+                              );
+                          if (context.mounted) {
+                            Navigator.pop(context, true);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setDialogState(() => isSending = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  e.toString().replaceFirst('Exception: ', ''),
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: isSending
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Отправить'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    final emailSent = emailController.text.trim();
+    emailController.dispose();
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Письмо отправлено на $emailSent. Проверьте почту.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -185,6 +289,15 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
+                if (_isLoginMode) ...[
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: isLoading ? null : _showForgotPasswordDialog,
+                      child: const Text('Забыли пароль?'),
+                    ),
+                  ),
+                ],
                 if (errorMessage != null) ...[
                   const SizedBox(height: 16),
                   Container(

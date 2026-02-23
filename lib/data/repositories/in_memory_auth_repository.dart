@@ -90,6 +90,13 @@ class InMemoryAuthRepository implements AuthRepository {
     _authController.add(null);
   }
 
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    throw UnimplementedError(
+      'Восстановление пароля недоступно в демо-режиме',
+    );
+  }
+
   void dispose() {
     _authController.close();
   }

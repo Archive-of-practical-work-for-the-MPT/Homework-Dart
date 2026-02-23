@@ -31,6 +31,8 @@ class FirebaseAuthRepository implements AuthRepository {
         return 'Неверная почта или пароль';
       case 'user-disabled':
         return 'Учётная запись отключена';
+      case 'too-many-requests':
+        return 'Слишком много попыток. Попробуйте позже.';
       default:
         return e.message ?? e.code;
     }
@@ -78,5 +80,16 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     await _auth.signOut();
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(
+        email: email.trim().toLowerCase(),
+      );
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_authExceptionToMessage(e));
+    }
   }
 }
