@@ -119,7 +119,7 @@ class InMemoryDeckRepository implements DeckRepository {
 
   @override
   Stream<List<DeckProgress>> watchDecks() {
-    _decksController.add(_buildDeckProgressList());
+    Future.microtask(() => _decksController.add(_buildDeckProgressList()));
     return _decksController.stream;
   }
 

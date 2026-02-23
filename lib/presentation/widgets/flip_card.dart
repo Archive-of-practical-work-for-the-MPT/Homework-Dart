@@ -80,11 +80,15 @@ class _FlipCardState extends State<FlipCard>
                     ..rotateY(angle),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                        width: 1,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: theme.colorScheme.shadow.withOpacity(0.15),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
