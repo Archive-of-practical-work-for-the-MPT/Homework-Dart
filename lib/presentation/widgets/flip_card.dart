@@ -7,6 +7,7 @@ class FlipCard extends StatefulWidget {
   final String back;
   final String? subtitle;
   final bool isFlipped;
+  final bool tapToFlip;
 
   const FlipCard({
     super.key,
@@ -14,6 +15,7 @@ class FlipCard extends StatefulWidget {
     required this.back,
     this.subtitle,
     this.isFlipped = false,
+    this.tapToFlip = false,
   });
 
   @override
@@ -23,6 +25,7 @@ class FlipCard extends StatefulWidget {
 class _FlipCardState extends State<FlipCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  bool _internalFlipped = false;
 
   @override
   void initState() {
@@ -31,7 +34,7 @@ class _FlipCardState extends State<FlipCard>
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
-    if (widget.isFlipped) {
+    if (widget.tapToFlip ? _internalFlipped : widget.isFlipped) {
       _controller.value = 1;
     }
   }
@@ -39,8 +42,9 @@ class _FlipCardState extends State<FlipCard>
   @override
   void didUpdateWidget(covariant FlipCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isFlipped != oldWidget.isFlipped) {
-      if (widget.isFlipped) {
+    final targetFlipped = widget.tapToFlip ? _internalFlipped : widget.isFlipped;
+    if (targetFlipped != (_controller.value >= 0.5)) {
+      if (targetFlipped) {
         _controller.forward();
       } else {
         _controller.reverse();
@@ -54,11 +58,21 @@ class _FlipCardState extends State<FlipCard>
     super.dispose();
   }
 
+  void _onTap() {
+    if (widget.tapToFlip) {
+      setState(() => _internalFlipped = !_internalFlipped);
+      if (_internalFlipped) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return LayoutBuilder(
+    final content = LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth.clamp(260.0, 460.0);
         final maxHeight = constraints.maxHeight.clamp(180.0, 320.0);
@@ -119,6 +133,13 @@ class _FlipCardState extends State<FlipCard>
         );
       },
     );
+    if (widget.tapToFlip) {
+      return GestureDetector(
+        onTap: _onTap,
+        child: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildSide(

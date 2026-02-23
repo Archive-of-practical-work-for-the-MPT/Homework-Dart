@@ -82,7 +82,11 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _authRepository.signOut();
+    try {
+      await _authRepository.signOut();
+    } catch (e) {
+      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
+    }
   }
 
   Future<void> sendPasswordReset(String email) async {

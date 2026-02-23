@@ -6,7 +6,7 @@ import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/deck_repository.dart';
 import '../domain/services/notification_service.dart';
 import '../data/repositories/firebase_auth_repository.dart';
-import '../data/repositories/in_memory_deck_repository.dart';
+import '../data/repositories/firestore_deck_repository.dart';
 import '../data/services/dummy_notification_service.dart';
 import 'auth/auth_cubit.dart';
 import 'auth/login_page.dart';
@@ -19,7 +19,7 @@ class LaLaLanguageApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authRepository = FirebaseAuthRepository();
-    final deckRepository = InMemoryDeckRepository();
+    final deckRepository = FirestoreDeckRepository();
     final notificationService = DummyNotificationService();
 
     return MultiRepositoryProvider(

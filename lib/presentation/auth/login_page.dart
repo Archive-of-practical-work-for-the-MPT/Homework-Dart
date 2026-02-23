@@ -132,19 +132,31 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authCubit = context.read<AuthCubit>();
-    setState(() {
-      _isSubmitting = true;
-    });
-    if (_isLoginMode) {
-      await authCubit.signIn(_emailController.text, _passwordController.text);
-    } else {
-      await authCubit.signUp(_emailController.text, _passwordController.text);
-    }
-    if (mounted) {
+    try {
+      final authCubit = context.read<AuthCubit>();
       setState(() {
-        _isSubmitting = false;
+        _isSubmitting = true;
       });
+      if (_isLoginMode) {
+        await authCubit.signIn(_emailController.text, _passwordController.text);
+      } else {
+        await authCubit.signUp(_emailController.text, _passwordController.text);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 

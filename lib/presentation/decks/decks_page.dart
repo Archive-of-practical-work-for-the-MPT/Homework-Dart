@@ -92,7 +92,7 @@ class DecksPage extends StatelessWidget {
 
     await showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Новый набор'),
           content: Form(
@@ -125,17 +125,30 @@ class DecksPage extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Отмена'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (formKey.currentState?.validate() ?? false) {
-                  context.read<DecksCubit>().createDeck(
-                        nameController.text,
-                        descriptionController.text,
+                  try {
+                    await context.read<DecksCubit>().createDeck(
+                          nameController.text,
+                          descriptionController.text,
+                        );
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                  } catch (e) {
+                    if (dialogContext.mounted) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        SnackBar(
+                          content: Text(e.toString().replaceFirst('Exception: ', '')),
+                          behavior: SnackBarBehavior.floating,
+                        ),
                       );
-                  Navigator.of(context).pop();
+                    }
+                  }
                 }
               },
               child: const Text('Создать'),
@@ -172,7 +185,18 @@ class DecksPage extends StatelessWidget {
     );
 
     if (result == true && context.mounted) {
-      await context.read<DecksCubit>().deleteDeck(deckId);
+      try {
+        await context.read<DecksCubit>().deleteDeck(deckId);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
     }
   }
 }

@@ -1,0 +1,12 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "nextReview", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

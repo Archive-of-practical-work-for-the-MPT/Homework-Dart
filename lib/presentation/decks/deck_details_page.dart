@@ -101,14 +101,30 @@ class _DeckDetailsView extends StatelessWidget {
                                           card.front,
                                         );
                                       },
-                                      onDismissed: (_) {
-                                        context
-                                            .read<DeckDetailsCubit>()
-                                            .deleteCard(card.id);
+                                      onDismissed: (_) async {
+                                        try {
+                                          await context
+                                              .read<DeckDetailsCubit>()
+                                              .deleteCard(card.id);
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  e.toString().replaceFirst(
+                                                      'Exception: ', ''),
+                                                ),
+                                                behavior: SnackBarBehavior.floating,
+                                              ),
+                                            );
+                                          }
+                                        }
                                       },
                                       child: FlipCard(
                                         front: card.front,
                                         back: card.back,
+                                        tapToFlip: true,
                                         subtitle:
                                             'Следующее повторение: ${_formatDate(card.nextReview)}',
                                       ),
@@ -137,7 +153,7 @@ class _DeckDetailsView extends StatelessWidget {
 
     await showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Новая карточка'),
           content: Form(
@@ -171,17 +187,32 @@ class _DeckDetailsView extends StatelessWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Отмена'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (formKey.currentState?.validate() ?? false) {
-                  context.read<DeckDetailsCubit>().addCard(
-                        frontController.text,
-                        backController.text,
+                  try {
+                    await context.read<DeckDetailsCubit>().addCard(
+                          frontController.text,
+                          backController.text,
+                        );
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                  } catch (e) {
+                    if (dialogContext.mounted) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.toString().replaceFirst('Exception: ', ''),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
                       );
-                  Navigator.of(context).pop();
+                    }
+                  }
                 }
               },
               child: const Text('Создать'),

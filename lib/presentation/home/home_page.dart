@@ -73,21 +73,34 @@ class _HomeScaffold extends StatelessWidget {
                 tooltip: 'Напоминание о повторении',
                 icon: const Icon(Icons.notifications_outlined),
                 onPressed: () async {
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: const TimeOfDay(hour: 10, minute: 0),
-                  );
-                  if (time != null) {
-                    await notificationService.scheduleDailyReviewReminder(
-                      hour: time.hour,
-                      minute: time.minute,
+                  try {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: const TimeOfDay(hour: 10, minute: 0),
                     );
+                    if (time != null) {
+                      await notificationService.scheduleDailyReviewReminder(
+                        hour: time.hour,
+                        minute: time.minute,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Напоминание о повторении запланировано на ${time.format(context)}',
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Напоминание о повторении запланировано на ${time.format(context)}',
+                            e.toString().replaceFirst('Exception: ', ''),
                           ),
+                          behavior: SnackBarBehavior.floating,
                         ),
                       );
                     }
@@ -97,8 +110,21 @@ class _HomeScaffold extends StatelessWidget {
               IconButton(
                 tooltip: 'Выйти',
                 icon: const Icon(Icons.logout),
-                onPressed: () {
-                  context.read<AuthCubit>().signOut();
+                onPressed: () async {
+                  try {
+                    await context.read<AuthCubit>().signOut();
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.toString().replaceFirst('Exception: ', ''),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
                 },
               ),
             ],
