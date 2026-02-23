@@ -7,5 +7,7 @@ abstract class NotificationService {
   });
 
   Future<void> cancelAll();
+
+  Future<void> rescheduleFromFirestore() async {}
 }
 

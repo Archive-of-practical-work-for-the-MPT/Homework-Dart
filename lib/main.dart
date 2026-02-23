@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'data/services/firebase_notification_service.dart';
+import 'domain/services/notification_service.dart';
 import 'firebase_options.dart';
 import 'presentation/app.dart';
 
@@ -16,7 +18,9 @@ void main() {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    runApp(const LaLaLanguageApp());
+    final notificationService = FirebaseNotificationService();
+    await notificationService.init();
+    runApp(LaLaLanguageApp(notificationService: notificationService));
   }, (error, stackTrace) {
     FlutterError.presentError(
       FlutterErrorDetails(

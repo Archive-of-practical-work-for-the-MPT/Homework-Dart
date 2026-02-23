@@ -7,20 +7,24 @@ import '../domain/repositories/deck_repository.dart';
 import '../domain/services/notification_service.dart';
 import '../data/repositories/firebase_auth_repository.dart';
 import '../data/repositories/firestore_deck_repository.dart';
-import '../data/services/dummy_notification_service.dart';
-import 'auth/auth_cubit.dart';
+import '../data/services/firebase_notification_service.dart';
+import 'auth/auth_cubit.dart' show AuthCubit, AuthLoading, AuthState, Authenticated;
 import 'auth/login_page.dart';
 import 'home/home_page.dart';
 import 'theme/theme_cubit.dart';
 
 class LaLaLanguageApp extends StatelessWidget {
-  const LaLaLanguageApp({super.key});
+  final NotificationService notificationService;
+
+  const LaLaLanguageApp({
+    super.key,
+    required this.notificationService,
+  });
 
   @override
   Widget build(BuildContext context) {
     final authRepository = FirebaseAuthRepository();
     final deckRepository = FirestoreDeckRepository();
-    final notificationService = DummyNotificationService();
 
     return MultiRepositoryProvider(
       providers: [
@@ -37,9 +41,14 @@ class LaLaLanguageApp extends StatelessWidget {
             create: (_) => ThemeCubit(),
           ),
         ],
-        child: BlocBuilder<ThemeCubit, ThemeMode>(
-          builder: (context, themeMode) {
-            return MaterialApp(
+        child: BlocListener<AuthCubit, AuthState>(
+          listenWhen: (prev, curr) => curr is Authenticated,
+          listener: (context, state) {
+            notificationService.rescheduleFromFirestore();
+          },
+          child: BlocBuilder<ThemeCubit, ThemeMode>(
+            builder: (context, themeMode) {
+              return MaterialApp(
               debugShowCheckedModeBanner: false,
               title: 'LaLaLanguage',
               theme: buildLightTheme(),
@@ -48,6 +57,7 @@ class LaLaLanguageApp extends StatelessWidget {
               home: const _RootRouter(),
             );
           },
+        ),
         ),
       ),
     );
