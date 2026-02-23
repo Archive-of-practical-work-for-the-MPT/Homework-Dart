@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "416539327201",
+    "project_id": "lalanguage-11488",
+    "storage_bucket": "lalanguage-11488.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416539327201:android:00f35e9dd75c10ad3ad5a0",
+        "android_client_info": {
+          "package_name": "com.example.lalalanguage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9kW9m99i69l8pm-l8qz0qRf12M9PtXWc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

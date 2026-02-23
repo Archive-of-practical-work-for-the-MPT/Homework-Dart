@@ -66,8 +66,8 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _authRepository.signIn(email: email, password: password);
     } catch (e) {
-      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
-      emit(const Unauthenticated());
+      final message = e.toString().replaceFirst('Exception: ', '');
+      emit(AuthError(message));
     }
   }
 
@@ -76,8 +76,8 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       await _authRepository.signUp(email: email, password: password);
     } catch (e) {
-      emit(AuthError(e.toString().replaceFirst('Exception: ', '')));
-      emit(const Unauthenticated());
+      final message = e.toString().replaceFirst('Exception: ', '');
+      emit(AuthError(message));
     }
   }
 

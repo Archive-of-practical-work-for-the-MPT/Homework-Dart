@@ -120,19 +120,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildCard(ThemeData theme) {
-    return BlocConsumer<AuthCubit, AuthState>(
-      listener: (context, state) {
-        if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
+    return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         final isLoading = state is AuthLoading || _isSubmitting;
+        final errorMessage = state is AuthError ? state.message : null;
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -194,6 +185,34 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
+                if (errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.errorContainer.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: theme.colorScheme.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            errorMessage,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   height: 48,
@@ -210,16 +229,6 @@ class _LoginPageState extends State<LoginPage> {
                         : Text(_isLoginMode ? 'Войти' : 'Создать аккаунт'),
                   ),
                 ),
-                if (_isLoginMode) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Тестовый доступ: demo@lala.app / password',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
               ],
             ),
           ),
