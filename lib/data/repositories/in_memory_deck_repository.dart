@@ -105,6 +105,14 @@ class InMemoryDeckRepository implements DeckRepository {
     final now = DateTime.now();
     final total = deckCards.length;
     final learned = deckCards.where((c) => c.repetition >= 3).length;
+    var progressScore = 0.0;
+    for (final c in deckCards) {
+      if (c.repetition >= 3) {
+        progressScore += 1.0;
+      } else if (c.repetition > 0) {
+        progressScore += c.repetition / 3;
+      }
+    }
     final dueToday = deckCards
         .where((c) => !c.nextReview.isAfter(DateTime(now.year, now.month, now.day, 23, 59, 59)))
         .length;
@@ -114,6 +122,7 @@ class InMemoryDeckRepository implements DeckRepository {
       totalCards: total,
       learnedCards: learned,
       dueToday: dueToday,
+      progressScore: progressScore,
     );
   }
 
@@ -283,6 +292,14 @@ class InMemoryDeckRepository implements DeckRepository {
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
     final totalCards = _cards.length;
     final learnedCards = _cards.values.where((c) => c.repetition >= 3).length;
+    var progressScore = 0.0;
+    for (final c in _cards.values) {
+      if (c.repetition >= 3) {
+        progressScore += 1.0;
+      } else if (c.repetition > 0) {
+        progressScore += c.repetition / 3;
+      }
+    }
     final dueToday =
         _cards.values.where((c) => !c.nextReview.isAfter(endOfDay)).length;
 
@@ -304,6 +321,7 @@ class InMemoryDeckRepository implements DeckRepository {
       totalCards: totalCards,
       learnedCards: learnedCards,
       dueToday: dueToday,
+      progressScore: progressScore,
     );
   }
 }

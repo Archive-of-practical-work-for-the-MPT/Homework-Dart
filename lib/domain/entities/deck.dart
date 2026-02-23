@@ -73,15 +73,22 @@ class DeckProgress {
   final int totalCards;
   final int learnedCards;
   final int dueToday;
+  final double? progressScore;
 
   const DeckProgress({
     required this.deck,
     required this.totalCards,
     required this.learnedCards,
     required this.dueToday,
+    this.progressScore,
   });
 
-  double get progress =>
-      totalCards == 0 ? 0 : learnedCards.clamp(0, totalCards) / totalCards;
+  double get progress {
+    if (totalCards == 0) return 0;
+    if (progressScore != null) {
+      return (progressScore! / totalCards).clamp(0.0, 1.0);
+    }
+    return learnedCards.clamp(0, totalCards) / totalCards;
+  }
 }
 

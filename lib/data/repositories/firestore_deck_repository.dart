@@ -32,11 +32,13 @@ class FirestoreDeckRepository implements DeckRepository {
 
   DeckProgress _docToDeckProgress(String id, Map<String, dynamic> doc) {
     final deck = _docToDeck(id, doc);
+    final progressScore = (doc['progressScore'] as num?)?.toDouble();
     return DeckProgress(
       deck: deck,
       totalCards: (doc['totalCards'] as int?) ?? 0,
       learnedCards: (doc['learnedCards'] as int?) ?? 0,
       dueToday: (doc['dueToday'] as int?) ?? 0,
+      progressScore: progressScore,
     );
   }
 
@@ -78,11 +80,18 @@ class FirestoreDeckRepository implements DeckRepository {
     var totalCards = 0;
     var learnedCards = 0;
     var dueToday = 0;
+    var progressScore = 0.0;
 
     for (final doc in cardsSnap.docs) {
       final data = doc.data();
       totalCards++;
-      if ((data['repetition'] as int? ?? 0) >= 3) learnedCards++;
+      final rep = (data['repetition'] as num?)?.toInt() ?? 0;
+      if (rep >= 3) {
+        learnedCards++;
+        progressScore += 1.0;
+      } else if (rep > 0) {
+        progressScore += rep / 3;
+      }
       final nextReview =
           (data['nextReview'] as Timestamp?)?.toDate() ?? DateTime.now();
       if (!nextReview.isAfter(endOfDay)) dueToday++;
@@ -92,6 +101,7 @@ class FirestoreDeckRepository implements DeckRepository {
       'totalCards': totalCards,
       'learnedCards': learnedCards,
       'dueToday': dueToday,
+      'progressScore': progressScore,
     });
   }
 
@@ -125,6 +135,7 @@ class FirestoreDeckRepository implements DeckRepository {
       'totalCards': 0,
       'learnedCards': 0,
       'dueToday': 0,
+      'progressScore': 0.0,
     });
     return deck;
   }
@@ -284,13 +295,13 @@ class FirestoreDeckRepository implements DeckRepository {
   Future<ReviewSummary> loadSummary({DateTime? today}) async {
     final now = today ?? DateTime.now();
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    final startOfDay = DateTime(now.year, now.month, now.day, 0, 0, 0);
 
     var totalCards = 0;
     var learnedCards = 0;
     var dueToday = 0;
     var reviewedToday = 0;
     var correctToday = 0;
+    var progressScore = 0.0;
 
     final decksSnap = await _decksRef.get();
     for (final deckDoc in decksSnap.docs) {
@@ -298,13 +309,20 @@ class FirestoreDeckRepository implements DeckRepository {
       for (final cardDoc in cardsSnap.docs) {
         final data = cardDoc.data();
         totalCards++;
-        if ((data['repetition'] as int? ?? 0) >= 3) learnedCards++;
+        final rep = (data['repetition'] as num?)?.toInt() ?? 0;
+        if (rep >= 3) {
+          learnedCards++;
+          progressScore += 1.0;
+        } else if (rep > 0) {
+          progressScore += rep / 3;
+        }
         final nextReview =
             (data['nextReview'] as Timestamp?)?.toDate() ?? DateTime.now();
         if (!nextReview.isAfter(endOfDay)) dueToday++;
 
-        final totalReviews = data['totalReviews'] as int? ?? 0;
-        final successfulReviews = data['successfulReviews'] as int? ?? 0;
+        final totalReviews = (data['totalReviews'] as num?)?.toInt() ?? 0;
+        final successfulReviews =
+            (data['successfulReviews'] as num?)?.toInt() ?? 0;
         if (totalReviews > 0) {
           reviewedToday += totalReviews;
           correctToday += successfulReviews;
@@ -318,6 +336,7 @@ class FirestoreDeckRepository implements DeckRepository {
       totalCards: totalCards,
       learnedCards: learnedCards,
       dueToday: dueToday,
+      progressScore: progressScore,
     );
   }
 }
